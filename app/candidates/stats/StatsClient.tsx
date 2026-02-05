@@ -37,6 +37,20 @@ export function StatsClient({ stats, searchParams }: StatsClientProps) {
       }))
     : [];
 
+  // Deduplicate gender data by name to avoid duplicate legend labels
+  const dedupGenderChartData = (() => {
+    const map = new Map<string, { name: string; value: number; color?: string }>();
+    for (const item of genderPieData) {
+      const existing = map.get(item.name);
+      if (existing) {
+        existing.value += item.value;
+      } else {
+        map.set(item.name, { ...item });
+      }
+    }
+    return Array.from(map.values());
+  })();
+
   const partyChartData = stats?.top_parties?.slice(0, 10).map((p) => ({
     name: p.party.length > 15 ? p.party.substring(0, 15) + '...' : p.party,
     candidates: p.candidate_count,
@@ -133,9 +147,9 @@ export function StatsClient({ stats, searchParams }: StatsClientProps) {
             <Card title="Gender Distribution" icon={<Users size={18} />}>
               {genderPieData.length > 0 ? (
                 <div className="flex flex-col items-center">
-                  <DonutChart data={genderPieData} height={240} showLabels />
+                  <DonutChart data={dedupGenderChartData} height={240} showLabels showLegend={false} />
                   <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-3 sm:mt-4">
-                    {genderPieData.map((item, idx) => (
+                    {dedupGenderChartData.map((item, idx) => (
                       <div key={`${item.name}-${idx}`} className="flex items-center gap-2">
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0"

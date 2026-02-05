@@ -36,6 +36,20 @@ export function DashboardClient({ pollingStats, electionStats }: DashboardClient
       }))
     : [];
 
+  // Deduplicate gender data by name to avoid duplicate legend labels
+  const dedupGenderChartData = (() => {
+    const map = new Map<string, { name: string; value: number; color?: string }>();
+    for (const item of genderChartData) {
+      const existing = map.get(item.name);
+      if (existing) {
+        existing.value += item.value;
+      } else {
+        map.set(item.name, { ...item });
+      }
+    }
+    return Array.from(map.values());
+  })();
+
   const partyChartData = electionStats?.top_parties?.slice(0, 8).map((p) => ({
     name: p.party.length > 20 ? p.party.substring(0, 20) + '...' : p.party,
     candidates: p.candidate_count,
@@ -114,12 +128,13 @@ export function DashboardClient({ pollingStats, electionStats }: DashboardClient
           {genderChartData.length > 0 ? (
             <div className="flex flex-col items-center">
               <DonutChart
-                data={genderChartData}
+                data={dedupGenderChartData}
                 height={240}
                 showLabels
+                showLegend={false}
               />
               <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-3 sm:mt-4">
-                {genderChartData.map((item, idx) => (
+                {dedupGenderChartData.map((item, idx) => (
                   <div key={`${item.name}-${idx}`} className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded-full flex-shrink-0"
