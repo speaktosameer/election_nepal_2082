@@ -52,15 +52,17 @@ export function StatsClient({ stats, searchParams }: StatsClientProps) {
   })();
 
   const partyChartData = stats?.top_parties?.slice(0, 10).map((p) => ({
-    name: p.party.length > 15 ? p.party.substring(0, 15) + '...' : p.party,
+    name: p.party,
     candidates: p.candidate_count,
   })) || [];
 
   const districtChartData = stats?.districts_summary?.slice(0, 15).map((d) => ({
-    name: d.district.length > 12 ? d.district.substring(0, 12) + '...' : d.district,
+    name: d.district,
     candidates: d.candidates,
     constituencies: d.constituencies,
   })) || [];
+
+  const calcMinWidth = (count: number, per = 80) => `${Math.max(count * per, 300)}px`;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -172,13 +174,16 @@ export function StatsClient({ stats, searchParams }: StatsClientProps) {
             <Card title="Top Political Parties" icon={<Flag size={18} />}>
               {partyChartData.length > 0 ? (
                 <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                  <div className="min-w-[300px]">
+                  <div style={{ minWidth: calcMinWidth(partyChartData.length, 80) }}>
                     <BarChart
                       data={partyChartData}
                       xKey="name"
                       yKey="candidates"
                       height={280}
                       colors={['#10b981']}
+                      showValues
+                      xTickAngle={-45}
+                      xTickFormatter={(v) => (typeof v === 'string' && v.length > 15 ? v.substring(0, 15) + '...' : v)}
                     />
                   </div>
                 </div>
@@ -194,13 +199,16 @@ export function StatsClient({ stats, searchParams }: StatsClientProps) {
           {districtChartData.length > 0 && (
             <Card title="Candidates by District" icon={<Building2 size={18} />}>
               <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                <div className="min-w-[300px]">
+                <div style={{ minWidth: calcMinWidth(districtChartData.length, 80) }}>
                   <BarChart
                     data={districtChartData}
                     xKey="name"
                     yKey="candidates"
                     height={300}
                     colors={['#10b981']}
+                    showValues
+                    xTickAngle={-45}
+                    xTickFormatter={(v) => (typeof v === 'string' && v.length > 12 ? v.substring(0, 12) + '...' : v)}
                   />
                 </div>
               </div>

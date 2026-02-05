@@ -18,6 +18,9 @@ interface AreaChartProps {
   color?: string;
   showGrid?: boolean;
   gradient?: boolean;
+  showValues?: boolean;
+  xTickAngle?: number;
+  xTickFormatter?: (value: any) => string;
 }
 
 export function AreaChart({
@@ -28,12 +31,15 @@ export function AreaChart({
   color = '#10b981',
   showGrid = true,
   gradient = true,
+  showValues = false,
+  xTickAngle,
+  xTickFormatter,
 }: AreaChartProps) {
   const gradientId = `colorGradient-${yKey}`;
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <RechartsAreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+      <RechartsAreaChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
         {gradient && (
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -48,6 +54,10 @@ export function AreaChart({
           tick={{ fill: '#9ca3af', fontSize: 12 }}
           axisLine={{ stroke: '#374151' }}
           tickLine={{ stroke: '#374151' }}
+          angle={xTickAngle}
+          textAnchor={xTickAngle ? 'end' : 'middle'}
+          tickFormatter={xTickFormatter}
+          interval={0}
         />
         <YAxis
           tick={{ fill: '#9ca3af', fontSize: 12 }}
@@ -68,6 +78,8 @@ export function AreaChart({
           stroke={color}
           fillOpacity={1}
           fill={gradient ? `url(#${gradientId})` : color}
+          dot={showValues ? { r: 3, stroke: color, fill: color } : false}
+          label={showValues ? { position: 'top', fill: '#e5e7eb', fontSize: 12 } : undefined}
         />
       </RechartsAreaChart>
     </ResponsiveContainer>

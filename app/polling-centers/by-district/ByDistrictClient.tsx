@@ -50,11 +50,13 @@ export function ByDistrictClient({ data, searchParams }: ByDistrictClientProps) 
     router.push(`/polling-centers/by-district?${params.toString()}`);
   };
 
-  const chartData = data?.data.slice(0, 15).map((d) => ({
-    name: d.district_en.length > 12 ? d.district_en.substring(0, 12) + '...' : d.district_en,
+  const chartData = data?.data.map((d) => ({
+    name: d.district_en.length > 20 ? d.district_en.substring(0, 20) + '...' : d.district_en,
     centers: d.total_centers,
     constituencies: d.constituencies_count,
   })) || [];
+
+  const calcMinWidth = (count: number, per = 80) => `${Math.max(count * per, 300)}px`;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -95,12 +97,15 @@ export function ByDistrictClient({ data, searchParams }: ByDistrictClientProps) 
       {chartData.length > 0 && (
         <Card title="Centers Distribution" icon={<MapPin size={18} />}>
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="min-w-[300px]">
+            <div style={{ minWidth: calcMinWidth(chartData.length, 80) }}>
               <BarChart
                 data={chartData}
                 xKey="name"
                 yKey="centers"
                 height={300}
+                showValues
+                xTickAngle={-45}
+                xTickFormatter={(v) => (typeof v === 'string' && v.length > 12 ? v.substring(0, 12) + '...' : v)}
               />
             </div>
           </div>

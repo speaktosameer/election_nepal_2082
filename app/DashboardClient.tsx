@@ -61,6 +61,8 @@ export function DashboardClient({ pollingStats, electionStats }: DashboardClient
     constituencies: d.constituencies,
   })) || [];
 
+  const calcMinWidth = (count: number, per = 80) => `${Math.max(count * per, 300)}px`;
+
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Header */}
@@ -104,15 +106,18 @@ export function DashboardClient({ pollingStats, electionStats }: DashboardClient
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Province Polling Centers Chart */}
-        <Card title="Polling Centers by Province" icon={<MapPin size={18} />}>
+            <Card title="Polling Centers by Province" icon={<MapPin size={18} />}>
           {provinceChartData.length > 0 ? (
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              <div className="min-w-[300px]">
+              <div style={{ minWidth: calcMinWidth(provinceChartData.length, 80) }}>
                 <BarChart
                   data={provinceChartData}
                   xKey="name"
                   yKey="centers"
                   height={280}
+                  showValues
+                  xTickAngle={-45}
+                  xTickFormatter={(v) => (typeof v === 'string' && v.length > 12 ? v.substring(0, 12) + '...' : v)}
                 />
               </div>
             </div>
@@ -161,13 +166,16 @@ export function DashboardClient({ pollingStats, electionStats }: DashboardClient
         <Card title="Top Political Parties" icon={<TrendingUp size={18} />}>
           {partyChartData.length > 0 ? (
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              <div className="min-w-[300px]">
+              <div style={{ minWidth: calcMinWidth(partyChartData.length, 80) }}>
                 <BarChart
                   data={partyChartData}
                   xKey="name"
                   yKey="candidates"
                   height={280}
                   colors={['#10b981']}
+                  showValues
+                  xTickAngle={-45}
+                  xTickFormatter={(v) => (typeof v === 'string' && v.length > 12 ? v.substring(0, 12) + '...' : v)}
                 />
               </div>
             </div>
@@ -182,13 +190,16 @@ export function DashboardClient({ pollingStats, electionStats }: DashboardClient
         <Card title="Candidates by District" icon={<Building2 size={18} />}>
           {districtChartData.length > 0 ? (
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              <div className="min-w-[300px]">
+              <div style={{ minWidth: calcMinWidth(districtChartData.length, 80) }}>
                 <AreaChart
                   data={districtChartData}
                   xKey="name"
                   yKey="candidates"
                   height={280}
                   color="#10b981"
+                  showValues
+                  xTickAngle={-45}
+                  xTickFormatter={(v) => (typeof v === 'string' && v.length > 12 ? v.substring(0, 12) + '...' : v)}
                 />
               </div>
             </div>

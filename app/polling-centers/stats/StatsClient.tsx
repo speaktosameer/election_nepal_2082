@@ -35,6 +35,8 @@ export function StatsClient({ stats, searchParams }: StatsClientProps) {
     districts: p.districts_count,
   })) || [];
 
+  const calcMinWidth = (count: number, per = 100) => `${Math.max(count * per, 300)}px`;
+
   const provincePieData = stats?.province_breakdown?.map((p, index) => {
     const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
     return {
@@ -97,12 +99,15 @@ export function StatsClient({ stats, searchParams }: StatsClientProps) {
             <Card title="Centers by Province" icon={<BarChart3 size={18} />}>
               {provinceChartData.length > 0 ? (
                 <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                  <div className="min-w-[300px]">
+                  <div style={{ minWidth: calcMinWidth(provinceChartData.length, 100) }}>
                     <BarChart
                       data={provinceChartData}
                       xKey="name"
                       yKey="centers"
                       height={300}
+                      showValues
+                      xTickAngle={-30}
+                      xTickFormatter={(v) => (typeof v === 'string' && v.length > 15 ? v.substring(0, 15) + '...' : v)}
                     />
                   </div>
                 </div>
