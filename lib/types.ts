@@ -356,3 +356,37 @@ export interface ElectionStatsResponse {
   top_parties: TopParty[];
   districts_summary: DistrictSummary[];
 }
+
+// Election Results Types
+export interface ElectionCandidate {
+  CandidateID: number;
+  CandidateName: string;
+  AGE_YR: number;
+  Gender: string;
+  PoliticalPartyName: string;
+  SYMBOLCODE: number;
+  SymbolName: string;
+  CTZDIST: number | string;
+  DistrictName: string;
+  StateName: string;
+  STATE_ID: number;
+  SCConstID: number;
+  ConstName: number | string;
+  TotalVoteReceived: number;
+  R: number;
+  E_STATUS: string | null;
+  DOB: number | string;
+  FATHER_NAME: string;
+  SPOUCE_NAME: string;
+  QUALIFICATION: string;
+  NAMEOFINST: string;
+  EXPERIENCE: string;
+  OTHERDETAILS: string;
+  ADDRESS: string;
+}
+
+export interface ElectionResultsResponse {
+  data: ElectionCandidate[];
+  total: number;
+  timestamp: string;
+}

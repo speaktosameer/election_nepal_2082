@@ -14,6 +14,8 @@ import {
   CandidatesByGenderResponse,
   CandidatesByAgeResponse,
   ElectionStatsResponse,
+  ElectionResultsResponse,
+  ElectionCandidate,
 } from './types';
 
 // ============================================================================
@@ -282,4 +284,142 @@ export async function getElectionStats(
 
   if (error) throw error;
   return data as ElectionStatsResponse;
+}
+
+// ============================================================================
+// ELECTION RESULTS API FUNCTIONS
+// ============================================================================
+
+export async function getElectionResults(params?: {
+  district?: string;
+  party?: string;
+  search_term?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<ElectionResultsResponse> {
+  try {
+    const response = await fetch(
+      'https://result.election.gov.np/JSONFiles/ElectionResultCentral2082.txt',
+      {
+        next: { revalidate: 300 }, // Cache for 5 minutes
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch election results: ${response.statusText}`);
+    }
+
+    const candidates: ElectionCandidate[] = await response.json();
+
+    // Filter based on parameters
+    let filtered = [...candidates];
+
+    if (params?.search_term) {
+      const term = params.search_term.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.CandidateName.toLowerCase().includes(term) ||
+          c.PoliticalPartyName.toLowerCase().includes(term) ||
+          c.DistrictName.toLowerCase().includes(term)
+      );
+    }
+
+    if (params?.district) {
+      filtered = filtered.filter(
+        (c) => c.DistrictName.toLowerCase() === params.district!.toLowerCase()
+      );
+    }
+
+    if (params?.party) {
+      filtered = filtered.filter(
+        (c) => c.PoliticalPartyName.toLowerCase() === params.party!.toLowerCase()
+      );
+    }
+
+    // Apply pagination
+    const offset = params?.offset || 0;
+    const limit = params?.limit || 50;
+    const paginatedData = filtered.slice(offset, offset + limit);
+
+    return {
+      data: paginatedData,
+      total: filtered.length,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('Error fetching election results:', error);
+    throw error;
+  }
+}
+
+export async function getElectionResultsByDistrict(
+  district?: string
+): Promise<ElectionResultsResponse> {
+  return getElectionResults({ district, limit: 1000 });
+}
+
+export async function getElectionResultsByParty(
+  party?: string
+): Promise<ElectionResultsResponse> {
+  return getElectionResults({ party, limit: 1000 });
+}
+
+export async function getElectionResultsStats(): Promise<{
+  total_candidates: number;
+  total_districts: number;
+  total_parties: number;
+  top_parties: Array<{
+    party: string;
+    candidate_count: number;
+    total_votes: number;
+  }>;
+  timestamp: string;
+}> {
+  try {
+    const response = await fetch(
+      'https://result.election.gov.np/JSONFiles/ElectionResultCentral2082.txt',
+      {
+        next: { revalidate: 300 },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch election results: ${response.statusText}`);
+    }
+
+    const candidates: ElectionCandidate[] = await response.json();
+
+    // Calculate statistics
+    const districts = new Set(candidates.map((c) => c.DistrictName));
+    const parties = new Set(candidates.map((c) => c.PoliticalPartyName));
+
+    const partyStats: { [key: string]: { count: number; votes: number } } = {};
+    candidates.forEach((c) => {
+      if (!partyStats[c.PoliticalPartyName]) {
+        partyStats[c.PoliticalPartyName] = { count: 0, votes: 0 };
+      }
+      partyStats[c.PoliticalPartyName].count++;
+      partyStats[c.PoliticalPartyName].votes += c.TotalVoteReceived || 0;
+    });
+
+    const topParties = Object.entries(partyStats)
+      .map(([party, stats]) => ({
+        party,
+        candidate_count: stats.count,
+        total_votes: stats.votes,
+      }))
+      .sort((a, b) => b.total_votes - a.total_votes)
+      .slice(0, 10);
+
+    return {
+      total_candidates: candidates.length,
+      total_districts: districts.size,
+      total_parties: parties.size,
+      top_parties: topParties,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('Error fetching election results stats:', error);
+    throw error;
+  }
 }
